@@ -2,13 +2,13 @@ using System.Diagnostics;
 
 namespace CookedAssetSerializer;
 
-public class Serializer<T> where T: Export
+public class Serializer<T> where T : Export
 {
     protected JSONSettings Settings;
 
     public bool IsSkipped;
     public string SkippedCode = "";
-    
+
     protected UAsset Asset;
     protected string AssetName;
     protected string AssetPath;
@@ -16,7 +16,7 @@ public class Serializer<T> where T: Export
 
     private readonly JObject JsonOut = new JObject();
     protected readonly JObject AssetData = new JObject();
-    
+
     protected T ClassExport;
     protected string ClassName;
 
@@ -30,7 +30,7 @@ public class Serializer<T> where T: Export
     protected bool SetupSerialization()
     {
         Dict = new Dictionary<int, int>();
-        
+
         var fullAssetPath = Asset.FilePath;
         AssetName = Path.GetFileNameWithoutExtension(fullAssetPath);
         var directory = Path.GetDirectoryName(fullAssetPath);
@@ -48,16 +48,24 @@ public class Serializer<T> where T: Export
 
         Asset = new UAsset(fullAssetPath, Settings.GlobalUEVersion, false);
 
-        /*Dict = */FixIndexes(Dict, Asset);
+        if (Asset.Exports.Any(e => e is RawExport))
+        {
+            Debug.WriteLine("No export lol");
+            IsSkipped = true;
+            return false;
+        }
+
+        /*Dict = */
+        FixIndexes(Dict, Asset);
 
         return true;
     }
-    
+
     protected bool SetupAssetInfo()
     {
         if (Asset.Exports[Asset.mainExport - 1] is RawExport)
         {
-            Debug.WriteLine("Raw " + Asset.FilePath); 
+            Debug.WriteLine("Raw " + Asset.FilePath);
             return false;
         }
         ClassExport = (T)Asset.Exports[Asset.mainExport - 1];
@@ -72,15 +80,21 @@ public class Serializer<T> where T: Export
 
         return true;
     }
-    
+
     protected void SerializeHeaders()
     {
         JsonOut.Add("AssetClass", ClassName);
         JsonOut.Add("AssetPackage", AssetPath);
         JsonOut.Add("AssetName", AssetName);
 
+
+        var fullName = GetFullName(ClassExport.ClassIndex.Index, Asset);
+        var thingName = Asset.Exports[Asset.mainExport - 1].ObjectName;
+        //Debug.WriteLine(fullName + " " + fullName.Contains("BP") + " " + fullName.Contains("IT"));
         AssetData.Add("SkipDependecies",
-            Settings.CircularDependency.Contains(GetFullName(ClassExport.ClassIndex.Index, Asset)));
+            Settings.CircularDependency.Contains(fullName) ||
+            thingName.Value.Value.Contains("_BP") ||
+            thingName.Value.Value.Contains("_IT"));
     }
 
     protected void AssignAssetSerializedData()

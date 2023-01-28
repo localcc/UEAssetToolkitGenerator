@@ -312,7 +312,7 @@ public class AssetBinaryReader : BinaryReader
             case "SkeletalMesh.KeepMobileMinLODSettingOnDesktop":  return Ver >=  UE4Version.VER_UE4_27;
             case "SkeletalMesh.UseNewCookedFormat":  return Ver >=  UE4Version.VER_UE4_24;
             case "SkeletalMesh.HasRayTracingData":  return Ver >=  UE4Version.VER_UE4_27;
-            case "StaticMesh.HasLODsShareStaticLighting":  return Ver <  UE4Version.VER_UE4_15 || Ver >= UE4Version.VER_UE4_24;
+            case "StaticMesh.HasLODsShareStaticLighting": return Ver < UE4Version.VER_UE4_15 || Ver >= UE4Version.VER_UE4_16;
             case "StaticMesh.HasRayTracingGeometry":  return Ver >=  UE4Version.VER_UE4_25;
             case "StaticMesh.HasVisibleInRayTracing":  return Ver >=  UE4Version.VER_UE4_26;
             case "StaticMesh.KeepMobileMinLODSettingOnDesktop":  return Ver >=  UE4Version.VER_UE4_27;

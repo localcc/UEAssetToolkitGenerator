@@ -12,7 +12,7 @@ public class StaticMeshFBX
         public FStaticMeshRenderData RenderData;
         public FStaticMaterial[] StaticMaterials;
     }
-    
+
     public StaticMeshFBX(FStaticMeshStruct meshStruct, string path, bool bExportAsText, ref string error, ref bool tooLarge)
     {
         string json = null;
@@ -26,7 +26,7 @@ public class StaticMeshFBX
             if (e.GetType().IsAssignableFrom(typeof(OutOfMemoryException))) tooLarge = true;
             return;
         }
-        
+
         // if json string is longer than 20 million characters (roughly 3.5mins completetion time), skip it
         if (json.Length > 20000000) // TODO: Make this a setting
         {
@@ -36,9 +36,9 @@ public class StaticMeshFBX
             tooLarge = true;
             return;
         }
-        
+
         //File.WriteAllText(Path.ChangeExtension(path, "json"), json); // This is for debugging
-        
+
         try
         {
             ExportStaticMeshIntoFbxFile(json, path, bExportAsText, ref error);

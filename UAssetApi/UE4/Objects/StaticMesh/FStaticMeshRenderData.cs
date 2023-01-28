@@ -23,7 +23,8 @@ public class FStaticMeshRenderData
 
         var len = reader.ReadInt32();
         LODs = new FStaticMeshLODResources[len];
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++)
+        {
             LODs[i] = new FStaticMeshLODResources(reader);
         }
 
@@ -52,7 +53,7 @@ public class FStaticMeshRenderData
                     var bValid = reader.ReadIntBoolean();
                     if (bValid)
                     {
-                         var _ = new FDistanceFieldVolumeData(reader);
+                        var _ = new FDistanceFieldVolumeData(reader);
                     }
                 }
             }

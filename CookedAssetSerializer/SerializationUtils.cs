@@ -51,7 +51,7 @@ public static class SerializationUtils
         "WebBrowser",
         "WidgetSwitcher"
     };
-    
+
     public static JArray SerializeScript(FunctionExport function, AssetInfo assetInfo)
     {
         var jscript = new JArray();
@@ -175,7 +175,7 @@ public static class SerializationUtils
 
         return assetInfo.GeneratedVariables;
     }
-    
+
     public static List<string> GetAllWidgets(ObjectPropertyData reftowidget, AssetInfo assetInfo)
     {
         var isvariable = false;
@@ -266,6 +266,146 @@ public static class SerializationUtils
         return jfunc;
     }
 
+    public static JObject SerializeUProperty(PropertyExport propertyExport, AssetInfo assetInfo, bool fieldKind = true)
+    {
+        var property = propertyExport.Property;
+        var jprop = new JObject();
+        if (fieldKind) jprop.Add("FieldKind", "Property");
+
+        // todo: tag uproperties with names
+        jprop.Add("ObjectClass", propertyExport.Property.PropertyClass);
+
+        jprop.Add("ObjectName", propertyExport.ObjectName.ToName());
+        /*
+        jprop.Add("ObjectClass", property..ToName());
+        jprop.Add("ObjectName", property.Name.ToName());*/
+
+        jprop.Add("ArrayDim", (byte)property.ArrayDim);
+        jprop.Add("PropertyFlags", ((long)property.PropertyFlags).ToString());
+        jprop.Add("RepNotifyFunc", property.RepNotifyFunc.ToName());
+        jprop.Add("BlueprintReplicationCondition", (byte)property.BlueprintReplicationCondition);
+
+        switch (property)
+        {
+            case UEnumProperty uenum:
+                {
+                    jprop.Add("Enum", Index(uenum.Enum.Index, assetInfo.Dict));
+
+                    //var underlyingExport = uenum.UnderlyingProp.ToExport(assetInfo.Asset) as PropertyExport;
+                    jprop.Add("UnderlyingProp", Index(uenum.UnderlyingProp.Index, assetInfo.Dict));
+                    break;
+                }
+            case UArrayProperty uarray:
+                {
+                    //var innerPropExport = uarray.Inner.ToExport(assetInfo.Asset) as PropertyExport;
+                    jprop.Add("Inner", Index(uarray.Inner.Index, assetInfo.Dict));
+                    break;
+                }
+            case USetProperty uset:
+                {
+                    //var elementPropExport = uset.ElementProp.ToExport(assetInfo.Asset) as PropertyExport;
+                    jprop.Add("ElementType", Index(uset.ElementProp.Index, assetInfo.Dict));
+                    break;
+                }
+            case UMapProperty umap:
+                {
+                    var keyPropExport = umap.KeyProp.ToExport(assetInfo.Asset) as PropertyExport;
+                    var valuePropExport = umap.ValueProp.ToExport(assetInfo.Asset) as PropertyExport;
+
+                    jprop.Add("KeyProp", Index(umap.KeyProp.Index, assetInfo.Dict));
+                    jprop.Add("ValueProp", Index(umap.ValueProp.Index, assetInfo.Dict));
+                    /*
+                    if (keyPropExport != null)
+                    {
+                        jprop.Add("KeyProp", SerializeUProperty(keyPropExport, assetInfo, false));
+                    }
+                    else
+                    {
+                        jprop.Add("KeyProp", Index(umap.KeyProp.Index, assetInfo.Dict));
+                    }
+
+                    if (valuePropExport != null)
+                    {
+                        jprop.Add("ValueProp", SerializeUProperty(valuePropExport, assetInfo, false));
+                    }
+                    else
+                    {
+
+                        jprop.Add("ValueProp", Index(umap.ValueProp.Index, assetInfo.Dict));
+                    }*/
+                    break;
+                }
+            case UInterfaceProperty uinterface:
+                {
+                    jprop.Add("InterfaceClass", Index(uinterface.InterfaceClass.Index, assetInfo.Dict));
+                    break;
+                }
+            case UBoolProperty ubool:
+                {
+                    jprop.Add("BoolSize", ubool.ElementSize);
+                    jprop.Add("NativeBool", ubool.NativeBool);
+                    break;
+                }
+            case UByteProperty ubyte:
+                {
+                    jprop.Add("Enum", Index(ubyte.Enum.Index, assetInfo.Dict));
+                    break;
+                }
+            case UStructProperty ustruct:
+                {
+                    jprop.Add("Struct", Index(ustruct.Struct.Index, assetInfo.Dict));
+                    break;
+                }
+            case UNumericProperty unumeric:
+                {
+                    break;
+                }
+            case UGenericProperty ugeneric:
+                {
+                    break;
+                }
+            case USoftClassProperty usoftclassprop:
+                {
+                    jprop.Add("MetaClass", Index(usoftclassprop.MetaClass.Index, assetInfo.Dict));
+                    break;
+                }
+            case USoftObjectProperty usoftobjectprop:
+                {
+                    jprop.Add("PropertyClass", Index(usoftobjectprop.PropertyClass.Index, assetInfo.Dict));
+                    break;
+                }
+            case UClassProperty uclassprop:
+                {
+                    jprop.Add("MetaClass", Index(uclassprop.MetaClass.Index, assetInfo.Dict));
+                    break;
+                }
+            case UObjectProperty uobjectprop:
+                {
+                    jprop.Add("PropertyClass", Index(uobjectprop.PropertyClass.Index, assetInfo.Dict));
+                    break;
+                }
+            case UDelegateProperty udelegate:
+                {
+                    jprop.Add("SignatureFunction", Index(udelegate.SignatureFunction.Index, assetInfo.Dict));
+                    /*
+                    if (udelegate.SignatureFunction.Index > 0)
+                    {
+                        jprop.Add("SignatureFunction", assetInfo.Asset.Exports[udelegate.SignatureFunction.Index - 1].ObjectName.ToName());
+                    }
+                    else if (udelegate.SignatureFunction.Index < 0)
+                    {
+                        jprop.Add("SignatureFunction", assetInfo.Asset.Imports[-udelegate.SignatureFunction.Index - 1].ObjectName.ToName());
+                    }
+                    else
+                    {
+                        jprop.Add("SignatureFunction", -1);
+                    }*/
+                    break;
+                }
+        }
+        return jprop;
+    }
+
     public static JObject SerializeProperty(FProperty property, AssetInfo assetInfo, bool fieldKind = true)
     {
         var jprop = new JObject();
@@ -281,76 +421,76 @@ public static class SerializationUtils
         switch (property)
         {
             case FEnumProperty fenum:
-            {
-                jprop.Add("Enum", Index(fenum.Enum.Index, assetInfo.Dict));
-                jprop.Add("UnderlyingProp", SerializeProperty(fenum.UnderlyingProp, assetInfo, false));
-                break;
-            }
+                {
+                    jprop.Add("Enum", Index(fenum.Enum.Index, assetInfo.Dict));
+                    jprop.Add("UnderlyingProp", SerializeProperty(fenum.UnderlyingProp, assetInfo, false));
+                    break;
+                }
             case FArrayProperty farray:
-            {
-                jprop.Add("Inner", SerializeProperty(farray.Inner, assetInfo, false));
-                break;
-            }
+                {
+                    jprop.Add("Inner", SerializeProperty(farray.Inner, assetInfo, false));
+                    break;
+                }
             case FSetProperty fset:
-            {
-                jprop.Add("ElementType", SerializeProperty(fset.ElementProp, assetInfo, false));
-                break;
-            }
+                {
+                    jprop.Add("ElementType", SerializeProperty(fset.ElementProp, assetInfo, false));
+                    break;
+                }
             case FMapProperty fmap:
-            {
-                jprop.Add("KeyProp", SerializeProperty(fmap.KeyProp, assetInfo, false));
-                jprop.Add("ValueProp", SerializeProperty(fmap.ValueProp, assetInfo, false));
-                break;
-            }
+                {
+                    jprop.Add("KeyProp", SerializeProperty(fmap.KeyProp, assetInfo, false));
+                    jprop.Add("ValueProp", SerializeProperty(fmap.ValueProp, assetInfo, false));
+                    break;
+                }
             case FInterfaceProperty finterface:
-            {
-                jprop.Add("InterfaceClass", Index(finterface.InterfaceClass.Index, assetInfo.Dict));
-                break;
-            }
+                {
+                    jprop.Add("InterfaceClass", Index(finterface.InterfaceClass.Index, assetInfo.Dict));
+                    break;
+                }
             case FBoolProperty fbool:
-            {
-                jprop.Add("BoolSize", fbool.ElementSize);
-                jprop.Add("NativeBool", fbool.NativeBool);
-                break;
-            }
+                {
+                    jprop.Add("BoolSize", fbool.ElementSize);
+                    jprop.Add("NativeBool", fbool.NativeBool);
+                    break;
+                }
             case FByteProperty fbyte:
-            {
-                jprop.Add("Enum", Index(fbyte.Enum.Index, assetInfo.Dict));
-                break;
-            }
+                {
+                    jprop.Add("Enum", Index(fbyte.Enum.Index, assetInfo.Dict));
+                    break;
+                }
             case FStructProperty fstruct:
-            {
-                jprop.Add("Struct", Index(fstruct.Struct.Index, assetInfo.Dict));
-                break;
-            }
+                {
+                    jprop.Add("Struct", Index(fstruct.Struct.Index, assetInfo.Dict));
+                    break;
+                }
             case FNumericProperty fnumeric:
-            {
-                break;
-            }
+                {
+                    break;
+                }
             case FGenericProperty fgeneric:
-            {
-                break;
-            }
+                {
+                    break;
+                }
             case FSoftClassProperty fsoftclassprop:
-            {
-                jprop.Add("MetaClass", Index(fsoftclassprop.MetaClass.Index, assetInfo.Dict));
-                break;
-            }
+                {
+                    jprop.Add("MetaClass", Index(fsoftclassprop.MetaClass.Index, assetInfo.Dict));
+                    break;
+                }
             case FSoftObjectProperty fsoftobjprop:
-            {
-                jprop.Add("PropertyClass", Index(fsoftobjprop.PropertyClass.Index, assetInfo.Dict));
-                break;
-            }
+                {
+                    jprop.Add("PropertyClass", Index(fsoftobjprop.PropertyClass.Index, assetInfo.Dict));
+                    break;
+                }
             case FClassProperty fclassprop:
-            {
-                jprop.Add("MetaClass", Index(fclassprop.MetaClass.Index, assetInfo.Dict));
-                break;
-            }
+                {
+                    jprop.Add("MetaClass", Index(fclassprop.MetaClass.Index, assetInfo.Dict));
+                    break;
+                }
             case FObjectProperty fobjprop:
-            {
-                jprop.Add("PropertyClass", Index(fobjprop.PropertyClass.Index, assetInfo.Dict));
-                break;
-            }
+                {
+                    jprop.Add("PropertyClass", Index(fobjprop.PropertyClass.Index, assetInfo.Dict));
+                    break;
+                }
             //case FMulticastInlineDelegateProperty fmidelegate: {
             //        jprop.Add("SignatureFunction", Index(fmidelegate.SignatureFunction.Index));
             //        break; };
@@ -358,17 +498,19 @@ public static class SerializationUtils
             //        jprop.Add("SignatureFunction", Index(fmdelegate.SignatureFunction.Index));
             //        break; };
             case FDelegateProperty fdelegate:
-            {
-                if (fdelegate.SignatureFunction.Index > 0)
-                    jprop.Add("SignatureFunction",
-                        assetInfo.Asset.Exports[fdelegate.SignatureFunction.Index - 1].ObjectName.ToName());
-                else if (fdelegate.SignatureFunction.Index < 0)
-                    jprop.Add("SignatureFunction",
-                        assetInfo.Asset.Imports[-fdelegate.SignatureFunction.Index - 1].ObjectName.ToName());
-                else
-                    jprop.Add("SignatureFunction", -1);
-                break;
-            }
+                {
+                    jprop.Add("SignatureFunction", Index(fdelegate.SignatureFunction.Index, assetInfo.Dict));
+                    /*
+                    if (fdelegate.SignatureFunction.Index > 0)
+                        jprop.Add("SignatureFunction",
+                            assetInfo.Asset.Exports[fdelegate.SignatureFunction.Index - 1].ObjectName.ToName());
+                    else if (fdelegate.SignatureFunction.Index < 0)
+                        jprop.Add("SignatureFunction",
+                            assetInfo.Asset.Imports[-fdelegate.SignatureFunction.Index - 1].ObjectName.ToName());
+                    else
+                        jprop.Add("SignatureFunction", -1);*/
+                    break;
+                }
         }
 
 
@@ -473,7 +615,7 @@ public static class SerializationUtils
         refObjects = new List<int>();
         return jexport;
     }
-    
+
     public static JProperty[] SerializePropertyData(PropertyData property, AssetInfo assetInfo, ref List<int> refObjects, bool withname = true)
     {
         var jprop = new JProperty(property.Name.ToName());
@@ -495,129 +637,129 @@ public static class SerializationUtils
             case UInt64PropertyData:
             case GameplayTagContainerPropertyData:
             case TextPropertyData:
-            {
-                jprop.Value = property.ToJson();
-                res.Add(jprop);
-                break;
-            }
-            case BytePropertyData prop:
-            {
-                if (prop.ByteType == BytePropertyType.Long)
-                    jprop.Value = assetInfo.Asset.GetNameReference(prop.Value).Value;
-                else
-                    jprop.Value = prop.Value;
-                res.Add(jprop);
-                break;
-            }
-            case EnumPropertyData prop:
-            {
-                jprop.Value = prop.Value.ToName();
-                res.Add(jprop);
-                break;
-            }
-            case NamePropertyData prop:
-            {
-                jprop.Value = prop.Value.ToName();
-                res.Add(jprop);
-                break;
-            }
-            case InterfacePropertyData prop:
-            {
-                jprop.Value = Index(prop.Value.Index, assetInfo.Dict);
-                refObjects.Add((int)jprop.Value);
-                res.Add(jprop);
-                break;
-            }
-            case ObjectPropertyData prop:
-            {
-                int index = Index(prop.Value.Index, assetInfo.Dict);
-                if (index == -1 && prop.Value.Index != 0)
                 {
-                    if (prop.Value.ToExport(assetInfo.Asset) is FunctionExport func)
+                    jprop.Value = property.ToJson();
+                    res.Add(jprop);
+                    break;
+                }
+            case BytePropertyData prop:
+                {
+                    if (prop.ByteType == BytePropertyType.Long)
+                        jprop.Value = assetInfo.Asset.GetNameReference(prop.Value).Value;
+                    else
+                        jprop.Value = prop.Value;
+                    res.Add(jprop);
+                    break;
+                }
+            case EnumPropertyData prop:
+                {
+                    jprop.Value = prop.Value.ToName();
+                    res.Add(jprop);
+                    break;
+                }
+            case NamePropertyData prop:
+                {
+                    jprop.Value = prop.Value.ToName();
+                    res.Add(jprop);
+                    break;
+                }
+            case InterfacePropertyData prop:
+                {
+                    jprop.Value = Index(prop.Value.Index, assetInfo.Dict);
+                    refObjects.Add((int)jprop.Value);
+                    res.Add(jprop);
+                    break;
+                }
+            case ObjectPropertyData prop:
+                {
+                    int index = Index(prop.Value.Index, assetInfo.Dict);
+                    if (index == -1 && prop.Value.Index != 0)
                     {
-                        jprop.Value = func.ObjectName.ToName();
-                        res.Add(jprop);
+                        if (prop.Value.ToExport(assetInfo.Asset) is FunctionExport func)
+                        {
+                            jprop.Value = func.ObjectName.ToName();
+                            res.Add(jprop);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Non valid object index" + prop.Value.Index);
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("Non valid object index" + prop.Value.Index);
+                        jprop.Value = index;
+                        refObjects.Add(index);
+                        res.Add(jprop);
                     }
-                }
-                else
-                {
-                    jprop.Value = index;
-                    refObjects.Add(index);
-                    res.Add(jprop);
-                }
 
-                break;
-            }
+                    break;
+                }
             case SoftObjectPropertyData prop:
-            {
-                jprop.Value = prop.Value.ToJson();
-                res.Add(jprop);
-                break;
-            }
-            case StrPropertyData prop:
-            {
-                if (prop.Value != null)
                 {
-                    jprop.Value = prop.Value.Value;
+                    jprop.Value = prop.Value.ToJson();
                     res.Add(jprop);
+                    break;
                 }
-
-                break;
-            }
-            case MapPropertyData prop:
-            {
-                var jvaluearray = new JArray();
-                for (var j = 1; j <= prop.Value.Count; j++)
+            case StrPropertyData prop:
                 {
-                    var jobj = new JObject();
+                    if (prop.Value != null)
+                    {
+                        jprop.Value = prop.Value.Value;
+                        res.Add(jprop);
+                    }
 
-                    var key = SerializePropertyData(prop.Value.Keys.ElementAt(j - 1), assetInfo, ref refObjects)[0];
-                    var jkey = new JProperty("Key", key.Value);
-                    jobj.Add(jkey);
-
-                    key = SerializePropertyData(prop.Value.Values.ElementAt(j - 1), assetInfo, ref refObjects)[0];
-                    jkey = new JProperty("Value", key.Value);
-                    jobj.Add(jkey);
-                    jvaluearray.Add(jobj);
+                    break;
                 }
+            case MapPropertyData prop:
+                {
+                    var jvaluearray = new JArray();
+                    for (var j = 1; j <= prop.Value.Count; j++)
+                    {
+                        var jobj = new JObject();
 
-                jprop.Value = jvaluearray;
-                res.Add(jprop);
-                break;
-            }
+                        var key = SerializePropertyData(prop.Value.Keys.ElementAt(j - 1), assetInfo, ref refObjects)[0];
+                        var jkey = new JProperty("Key", key.Value);
+                        jobj.Add(jkey);
+
+                        key = SerializePropertyData(prop.Value.Values.ElementAt(j - 1), assetInfo, ref refObjects)[0];
+                        jkey = new JProperty("Value", key.Value);
+                        jobj.Add(jkey);
+                        jvaluearray.Add(jobj);
+                    }
+
+                    jprop.Value = jvaluearray;
+                    res.Add(jprop);
+                    break;
+                }
             //case SetPropertyData prop: { break; }
             case ArrayPropertyData prop:
-            {
-                var jvaluearray = new JArray();
-                foreach (var valueelement in prop.Value)
                 {
-                    var element = SerializePropertyData(valueelement, assetInfo, ref refObjects);
-                    foreach (var ele in element)
+                    var jvaluearray = new JArray();
+                    foreach (var valueelement in prop.Value)
                     {
-                        jvaluearray.Add(ele.Value);
+                        var element = SerializePropertyData(valueelement, assetInfo, ref refObjects);
+                        foreach (var ele in element)
+                        {
+                            jvaluearray.Add(ele.Value);
+                        }
                     }
-                }
 
-                jprop.Value = jvaluearray;
-                res.Add(jprop);
-                break;
-            }
+                    jprop.Value = jvaluearray;
+                    res.Add(jprop);
+                    break;
+                }
             case UnknownPropertyData:
-            {
-                jprop.Value = "##NOT SERIALIZED##";
-                res.Add(jprop);
-                break;
-            }
+                {
+                    jprop.Value = "##NOT SERIALIZED##";
+                    res.Add(jprop);
+                    break;
+                }
             case RawStructPropertyData:
-            {
-                jprop.Value = "##NOT SERIALIZED##";
-                res.Add(jprop);
-                break;
-            }
+                {
+                    jprop.Value = "##NOT SERIALIZED##";
+                    res.Add(jprop);
+                    break;
+                }
             case DateTimePropertyData:
             case TimespanPropertyData:
             case SmartNamePropertyData:
@@ -650,138 +792,138 @@ public static class SerializationUtils
             case MovieSceneTrackFieldDataPropertyData:
             //case MovieSceneSequenceInstanceDataPtrPropertyData:
             case MovieSceneFloatChannelPropertyData:
-            {
-                res.AddRange(((JObject)property.ToJson()).Properties());
-                break;
-            }
+                {
+                    res.AddRange(((JObject)property.ToJson()).Properties());
+                    break;
+                }
             case FontDataPropertyData prop:
-            {
-                var value = new JObject();
-                var fontdata = prop.Value;
-                if (fontdata.bIsCooked)
                 {
-                    value.Add("FontFaceAsset", Index(fontdata.LocalFontFaceAsset.Index, assetInfo.Dict));
-                    refObjects.Add(Index(fontdata.LocalFontFaceAsset.Index, assetInfo.Dict));
-                    if (fontdata.FontFilename != null)
-                        value.Add("FontFilename", fontdata.FontFilename.ToString());
-                    else
-                        value.Add("FontFilename", "");
-                    value.Add("Hinting", "EFontHinting::" + fontdata.Hinting);
-                    value.Add("LoadingPolicy", "EFontLoadingPolicy::" + fontdata.LoadingPolicy);
-                    value.Add("SubFaceIndex", fontdata.SubFaceIndex);
-                }
+                    var value = new JObject();
+                    var fontdata = prop.Value;
+                    if (fontdata.bIsCooked)
+                    {
+                        value.Add("FontFaceAsset", Index(fontdata.LocalFontFaceAsset.Index, assetInfo.Dict));
+                        refObjects.Add(Index(fontdata.LocalFontFaceAsset.Index, assetInfo.Dict));
+                        if (fontdata.FontFilename != null)
+                            value.Add("FontFilename", fontdata.FontFilename.ToString());
+                        else
+                            value.Add("FontFilename", "");
+                        value.Add("Hinting", "EFontHinting::" + fontdata.Hinting);
+                        value.Add("LoadingPolicy", "EFontLoadingPolicy::" + fontdata.LoadingPolicy);
+                        value.Add("SubFaceIndex", fontdata.SubFaceIndex);
+                    }
 
-                jprop.Value = value;
-                res.AddRange(value.Properties());
-                break;
-            }
+                    jprop.Value = value;
+                    res.AddRange(value.Properties());
+                    break;
+                }
             case MovieSceneSegmentPropertyData prop:
-            {
-                var value = new JObject();
-                value.Add("Range", prop.Value.Range.ToJson());
-                value.Add("ID", prop.Value.ID.IdentifierIndex);
-                value.Add("bAllowEmpty", prop.Value.bAllowEmpty);
-
-                var jimpls = new JArray();
-
-
-                foreach (var item in prop.Value.Impls)
                 {
-                    var structres = SerializeListOfProperties(item, assetInfo, ref refObjects, true);
-                    jimpls.Add(structres);
-                }
+                    var value = new JObject();
+                    value.Add("Range", prop.Value.Range.ToJson());
+                    value.Add("ID", prop.Value.ID.IdentifierIndex);
+                    value.Add("bAllowEmpty", prop.Value.bAllowEmpty);
 
-                var data = new JObject();
-                value.Add("Impls", jimpls);
-                jprop.Value = value;
-                res.Add(jprop);
-                break;
-            }
+                    var jimpls = new JArray();
+
+
+                    foreach (var item in prop.Value.Impls)
+                    {
+                        var structres = SerializeListOfProperties(item, assetInfo, ref refObjects, true);
+                        jimpls.Add(structres);
+                    }
+
+                    var data = new JObject();
+                    value.Add("Impls", jimpls);
+                    jprop.Value = value;
+                    res.Add(jprop);
+                    break;
+                }
             case SectionEvaluationDataTreePropertyData prop:
-            {
-                var Tree = prop.Value.Tree;
-
-                var value = new JObject();
-
-                var serdata = new JObject();
-                serdata.Add("RootNode", Tree.RootNode.ToJson());
-
-                var entries = new JArray();
-                var items = new JArray();
-                foreach (var entry in Tree.ChildNodes.Entries)
                 {
-                    entries.Add(entry.ToJson());
+                    var Tree = prop.Value.Tree;
+
+                    var value = new JObject();
+
+                    var serdata = new JObject();
+                    serdata.Add("RootNode", Tree.RootNode.ToJson());
+
+                    var entries = new JArray();
+                    var items = new JArray();
+                    foreach (var entry in Tree.ChildNodes.Entries)
+                    {
+                        entries.Add(entry.ToJson());
+                    }
+
+                    foreach (var item in Tree.ChildNodes.Items)
+                    {
+                        items.Add(item.ToJson());
+                    }
+
+                    var childnodes = new JObject();
+
+                    childnodes.Add("Entries", entries);
+                    childnodes.Add("Items", items);
+                    serdata.Add("ChildNodes", childnodes);
+
+                    entries = new JArray();
+                    items = new JArray();
+                    foreach (var entry in Tree.Data.Entries)
+                    {
+                        entries.Add(entry.ToJson());
+                    }
+
+
+                    foreach (var item in Tree.Data.Items)
+                    {
+                        var structres = SerializeListOfProperties(item, assetInfo, ref refObjects, true);
+                        items.Add(structres);
+                    }
+
+                    var data = new JObject();
+                    data.Add("Entries", entries);
+                    data.Add("Items", items);
+                    serdata.Add("Data", data);
+                    value.Add("Tree", serdata);
+                    jprop.Value = value;
+                    res.Add(jprop);
+                    break;
                 }
-
-                foreach (var item in Tree.ChildNodes.Items)
-                {
-                    items.Add(item.ToJson());
-                }
-
-                var childnodes = new JObject();
-
-                childnodes.Add("Entries", entries);
-                childnodes.Add("Items", items);
-                serdata.Add("ChildNodes", childnodes);
-
-                entries = new JArray();
-                items = new JArray();
-                foreach (var entry in Tree.Data.Entries)
-                {
-                    entries.Add(entry.ToJson());
-                }
-
-
-                foreach (var item in Tree.Data.Items)
-                {
-                    var structres = SerializeListOfProperties(item, assetInfo, ref refObjects, true);
-                    items.Add(structres);
-                }
-
-                var data = new JObject();
-                data.Add("Entries", entries);
-                data.Add("Items", items);
-                serdata.Add("Data", data);
-                value.Add("Tree", serdata);
-                jprop.Value = value;
-                res.Add(jprop);
-                break;
-            }
             case StructPropertyData prop:
-            {
-                var structres = SerializeListOfProperties(prop.Value, assetInfo, ref refObjects, true);
-                jprop.Value = structres;
-                res.Add(jprop);
-                break;
-            }
-            case FieldPathPropertyData prop:
-            {
-                if (prop.Value.Length == 0)
                 {
+                    var structres = SerializeListOfProperties(prop.Value, assetInfo, ref refObjects, true);
+                    jprop.Value = structres;
+                    res.Add(jprop);
+                    break;
+                }
+            case FieldPathPropertyData prop:
+                {
+                    if (prop.Value.Length == 0)
+                    {
+                        jprop.Value = "##NOT SERIALIZED##";
+                        res.Add(jprop);
+                        break;
+                    }
+
+                    if (prop.Value.Length > 1)
+                        Console.WriteLine("FieldPathPropertyData Values array has more than one name");
+                    jprop.Value = GetFullName(prop.ResolvedOwner.Index, assetInfo.Asset) + ":" + prop.Value[0].ToName();
+                    res.Add(jprop);
+                    break;
+                }
+            default:
+                {
+                    Console.WriteLine(property.PropertyType.ToName());
                     jprop.Value = "##NOT SERIALIZED##";
                     res.Add(jprop);
                     break;
                 }
-
-                if (prop.Value.Length > 1)
-                    Console.WriteLine("FieldPathPropertyData Values array has more than one name");
-                jprop.Value = GetFullName(prop.ResolvedOwner.Index, assetInfo.Asset) + ":" + prop.Value[0].ToName();
-                res.Add(jprop);
-                break;
-            }
-            default:
-            {
-                Console.WriteLine(property.PropertyType.ToName());
-                jprop.Value = "##NOT SERIALIZED##";
-                res.Add(jprop);
-                break;
-            }
         }
 
         return res.ToArray();
     }
-    
-    public static JProperty SerializeData(List<PropertyData> data, AssetInfo assetInfo, 
+
+    public static JProperty SerializeData(List<PropertyData> data, AssetInfo assetInfo,
         ref List<int> refObjects, bool mainobject = true)
     {
         JProperty jdata;
@@ -879,19 +1021,19 @@ public static class SerializationUtils
                     switch (assetInfo.Asset.Exports[i - 1])
                     {
                         case FunctionExport:
-                        {
-                            continue;
-                        }
+                            {
+                                continue;
+                            }
                         case SoundNodeExport:
-                        {
-                            continue;
-                        }
+                            {
+                                continue;
+                            }
                         case NormalExport normal:
-                        {
-                            jexport = SerializeNormalExport(normal, assetInfo, 
-                                ref refObjects, Index(i, assetInfo.Dict));
-                            break;
-                        }
+                            {
+                                jexport = SerializeNormalExport(normal, assetInfo,
+                                    ref refObjects, Index(i, assetInfo.Dict));
+                                break;
+                            }
                     }
                 }
 
@@ -901,7 +1043,7 @@ public static class SerializationUtils
 
         return new JProperty("ObjectHierarchy", ObjHie);
     }
-    
+
     public static bool FindExternalProperty(UAsset asset, FName propname, out FProperty property)
     {
         var export = asset.GetClassExport();
@@ -949,8 +1091,10 @@ public static class SerializationUtils
         prop = null;
         if (export is NormalExport exp)
         {
-            foreach (var property in exp.Data) {
-                if (property.Name.ToName() == propname) {
+            foreach (var property in exp.Data)
+            {
+                if (property.Name.ToName() == propname)
+                {
                     prop = property;
                     return true;
                 }
@@ -1033,7 +1177,7 @@ public static class SerializationUtils
             return validindex;
         return -1;
     }
-    
+
     public static string GetName(int index, UAsset asset)
     {
         if (index > 0)
@@ -1176,7 +1320,7 @@ public static class SerializationUtils
 
         return true;
     }
-    
+
     public static JObject GuidToJson(Guid Value)
     {
         var res = new JObject();

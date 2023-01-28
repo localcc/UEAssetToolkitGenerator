@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CookedAssetSerializerGUI": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

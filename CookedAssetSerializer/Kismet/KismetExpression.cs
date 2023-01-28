@@ -305,7 +305,7 @@ public class KismetExpressionSerializer
         var jproparray = new JProperty[names.Length];
 
         FProperty property;
-        if (pointer != null && pointer.New.ResolvedOwner.Index != 0)
+        if (pointer != null && pointer.New != null && pointer.New.ResolvedOwner.Index != 0)
         {
             if (FindProperty(pointer.New.ResolvedOwner.Index, pointer.New.Path[0], out property, asset, ref importVariables))
             {
@@ -484,9 +484,9 @@ public class KismetExpressionSerializer
             case EX_LetValueOnPersistentFrame exp:
             {
                 jexp.Add("Inst", exp.Inst);
-                jexp.Add("PropertyName", exp.DestinationProperty.New.Path[0].ToName());
+                //jexp.Add("PropertyName", exp.DestinationProperty.New.Path[0].ToName());
 
-                index += 8;
+                //index += 8;
                 jexp.Add(SerializePropertyPointer(exp.DestinationProperty, new[] { "PropertyType" }, asset, importVariables));
                 jexp.Add("Expression", SerializeExpression(exp.AssignmentExpression, ref index, asset, importVariables));
                 break;
@@ -496,7 +496,7 @@ public class KismetExpressionSerializer
                 jexp.Add("Inst", exp.Inst);
                 index += 8;
                 jexp.Add(SerializePropertyPointer(exp.Property, new[] { "PropertyType" }, asset, importVariables));
-                jexp.Add("PropertyName", exp.Property.New.Path[0].ToName());
+                //jexp.Add("PropertyName", exp.Property.New.Path[0].ToName());
                 jexp.Add("StructExpression", SerializeExpression(exp.StructExpression, ref index, asset, importVariables));
                 break;
             }

@@ -19,7 +19,8 @@ public class MovieSceneFloatChannelPropertyData : PropertyData<FMovieSceneFloatC
         Value = new FMovieSceneFloatChannel();
     }
 
-    public MovieSceneFloatChannelPropertyData(FName name, int duplindex) : base(name) {
+    public MovieSceneFloatChannelPropertyData(FName name, int duplindex) : base(name)
+    {
         Value = new FMovieSceneFloatChannel();
         DuplicationIndex = duplindex;
     }
@@ -36,6 +37,18 @@ public class MovieSceneFloatChannelPropertyData : PropertyData<FMovieSceneFloatC
         }
         Value = new FMovieSceneFloatChannel();
 
+        if (reader.Asset.GetCustomVersion<FSequencerObjectVersion>() < FSequencerObjectVersion.SerializeFloatChannelCompletely)
+        {
+            Value.PreInfinityExtrap = ERichCurveExtrapolation.RCCE_None;
+            Value.PostInfinityExtrap = ERichCurveExtrapolation.RCCE_None;
+            Value.Times = new FFrameNumber[0];
+            Value.Values = new FMovieSceneFloatValue[0];
+            Value.DefaultValue = 0;
+            Value.bHasDefaultValue = false;
+            Value.TickResolution = new FFrameRate();
+            return;
+        }
+
         Value.PreInfinityExtrap = (ERichCurveExtrapolation)reader.ReadSByte();
         Value.PostInfinityExtrap = (ERichCurveExtrapolation)reader.ReadSByte();
 
@@ -43,7 +56,8 @@ public class MovieSceneFloatChannelPropertyData : PropertyData<FMovieSceneFloatC
         TimesLength = reader.ReadInt32();
 
         Value.Times = new FFrameNumber[TimesLength];
-        for ( int j=0; j<TimesLength; j++) {
+        for (int j = 0; j < TimesLength; j++)
+        {
             Value.Times[j] = new FFrameNumber(reader.ReadInt32());
         }
 
@@ -51,7 +65,8 @@ public class MovieSceneFloatChannelPropertyData : PropertyData<FMovieSceneFloatC
         ValuesLength = reader.ReadInt32();
         Value.Values = new FMovieSceneFloatValue[ValuesLength];
 
-        for (int j = 0; j < ValuesLength; j++) {
+        for (int j = 0; j < ValuesLength; j++)
+        {
             Value.Values[j].Read(reader);
         }
 
@@ -79,13 +94,15 @@ public class MovieSceneFloatChannelPropertyData : PropertyData<FMovieSceneFloatC
 
         writer.Write(TimesStructLength);
         writer.Write(TimesLength);
-        for (int j = 0; j < TimesLength; j++) {
-            writer.Write(Value.Times[j].Value); 
+        for (int j = 0; j < TimesLength; j++)
+        {
+            writer.Write(Value.Times[j].Value);
         }
 
         writer.Write(ValuesStructLength);
         writer.Write(ValuesLength);
-        for (int j = 0; j < ValuesLength; j++) {
+        for (int j = 0; j < ValuesLength; j++)
+        {
             Value.Values[j].Write(writer);
         }
 
@@ -97,7 +114,8 @@ public class MovieSceneFloatChannelPropertyData : PropertyData<FMovieSceneFloatC
         return (int)writer.BaseStream.Position - here;
     }
 
-    public override JToken ToJson() {
+    public override JToken ToJson()
+    {
         return Value.ToJson();
     }
 

@@ -12,9 +12,10 @@ namespace CookedAssetSerializerGUI;
 
 public partial class MainForm : Form
 {
-    public MainForm() {
-        Singleton.Init(new Dictionary<string, bool> 
-        { 
+    public MainForm()
+    {
+        Singleton.Init(new Dictionary<string, bool>
+        {
             ["StaticMesh.KeepMobileMinLODSettingOnDesktop"] = false,
             ["SkeletalMesh.KeepMobileMinLODSettingOnDesktop"] = false
         });
@@ -41,7 +42,7 @@ public partial class MainForm : Form
     private JSONSettings jsonsettings;
 
     private volatile bool isRunning;
-    
+
     private object boolLock = new object();
 
     private string lastValidContentDir = string.Empty;
@@ -135,9 +136,9 @@ public partial class MainForm : Form
     }
 
     #endregion
-    
+
     #region Setup/Mainform
-    
+
     private void MainForm_Load(object sender, EventArgs e)
     {
         //panel1.Visible = false;
@@ -148,23 +149,23 @@ public partial class MainForm : Form
         }
         chkSettDNS.Checked = AppSettings.Default.bDNSSave;
     }
-    
+
     private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
     {
         if (e.CloseReason == CloseReason.WindowsShutDown) return;
 
         if (AppSettings.Default.bDNSSave == false)
         {
-            var dialog = new ChkBoxDialog2Bool("Save?", "Do you want to save before exiting?", 
+            var dialog = new ChkBoxDialog2Bool("Save?", "Do you want to save before exiting?",
                 "Auto load last used config on launch?", "Do not show again.");
             if (AppSettings.Default.bAutoUseLastCfg == true) dialog.b1Dialog = true;
-            
+
             var result = dialog.ShowDialog();
-            
+
             AppSettings.Default.bAutoUseLastCfg = dialog.b1Dialog;
             AppSettings.Default.bDNSSave = dialog.b2Dialog;
             AppSettings.Default.Save();
-            
+
             if (result == DialogResult.Yes)
             {
                 SetupGlobals();
@@ -179,15 +180,15 @@ public partial class MainForm : Form
     {
         while (true)
         {
-            lock(boolLock) if (isRunning)
-            {
-                if (system.GetAssetTotal() != 0) 
+            lock (boolLock) if (isRunning)
                 {
-                    ProgressText(system.GetAssetCount() + " / " + system.GetAssetTotal());
+                    if (system.GetAssetTotal() != 0)
+                    {
+                        ProgressText(system.GetAssetCount() + " / " + system.GetAssetTotal());
+                    }
                 }
-            }
             await Task.Delay(50);
-            
+
             // Do this in order to make sure that the correct total is outputted when the isRunning is set to false
             // and the delay is not enough to make the total outputted
             if ((system.GetAssetTotal() == system.GetAssetCount()) && system.GetAssetTotal() != 0)
@@ -196,7 +197,7 @@ public partial class MainForm : Form
             }
         }
     }
-    
+
     private void SetupAssetsListBox(List<EAssetType> assets, ListBox assetBox)
     {
         assetBox.DataSource = Enum.GetValues(typeof(EAssetType));
@@ -242,7 +243,7 @@ public partial class MainForm : Form
         List<EAssetType> defaultDummyAssets = new() { };
         SetupAssetsListBox(defaultDummyAssets, lbDummyAssets);
     }
-    
+
     public void SetupGlobals()
     {
         var typesToCopy = new List<string>();
@@ -256,18 +257,18 @@ public partial class MainForm : Form
         var circularDependencies = new List<string>();
         circularDependencies.AddRange(SanitiseInputs(rtxtCircularDependancy.Lines));
 
-        if (string.IsNullOrEmpty(rtxtJSONDir.Text)) 
+        if (string.IsNullOrEmpty(rtxtJSONDir.Text))
         {
             rtxtJSONDir.Text = Path.Combine(Directory.GetParent(rtxtContentDir.Text)!.FullName, "AssetDump");
             Directory.CreateDirectory(rtxtJSONDir.Text);
         }
 
-        if (string.IsNullOrEmpty(rtxtToDir.Text)) 
+        if (string.IsNullOrEmpty(rtxtToDir.Text))
         {
             rtxtToDir.Text = Path.Combine(Directory.GetParent(rtxtContentDir.Text)!.FullName, "Cooked");
             Directory.CreateDirectory(rtxtToDir.Text);
         }
-        
+
         jsonsettings = new JSONSettings
         {
             ContentDir = rtxtContentDir.Text,
@@ -292,7 +293,7 @@ public partial class MainForm : Form
 
         system = new CookedAssetSerializer.System(jsonsettings);
     }
-    
+
     #endregion
 
     #region rtxt Leave/Enter
@@ -313,7 +314,7 @@ public partial class MainForm : Form
             rtxtToDir.ForeColor = SystemColors.WindowText;
         }
     }
-    
+
     private void rtxtFromDir_Leave(object sender, EventArgs e)
     {
         if (rtxtFromDir.Text.Length == 0)
@@ -385,7 +386,7 @@ public partial class MainForm : Form
             rtxtLogDir.ForeColor = SystemColors.WindowText;
         }
     }
-    
+
     private void rtxtDfltGamCnfg_Leave(object sender, EventArgs e)
     {
         if (rtxtDfltGamCnfg.Text.Length == 0)
@@ -403,7 +404,7 @@ public partial class MainForm : Form
             rtxtDfltGamCnfg.ForeColor = SystemColors.WindowText;
         }
     }
-    
+
     private void rtxtAR_Leave(object sender, EventArgs e)
     {
         if (rtxtAR.Text.Length == 0)
@@ -439,12 +440,12 @@ public partial class MainForm : Form
 
         return lines;
     }
-    
+
     private List<string> GetRelativeMinFileList()
     {
         if (treeParseDir.ContentNode is null) return new();
         var res = new List<string>();
-        foreach(var path in treeParseDir.ContentNode.GatherMinFileList())
+        foreach (var path in treeParseDir.ContentNode.GatherMinFileList())
         {
             res.Add(Path.GetRelativePath(rtxtContentDir.Text, path));
         }
@@ -497,7 +498,7 @@ public partial class MainForm : Form
             OutputText("Warning! Unable to find last used config!", rtxtOutput);
             return;
         }
-        
+
         try
         {
             jsonsettings = JsonConvert.DeserializeObject<JSONSettings>(File.ReadAllText(configFile));
@@ -508,9 +509,9 @@ public partial class MainForm : Form
         {
             OutputText("Warning! Last used config is invalid!", rtxtOutput);
             OutputText(exception.ToString(), rtxtOutput);
-        }        
+        }
     }
-    
+
     private void ToggleButtons()
     {
         if (InvokeRequired)
@@ -530,7 +531,7 @@ public partial class MainForm : Form
         }
     }
 
-    private void ProgressText(string text) 
+    private void ProgressText(string text)
     {
         if (InvokeRequired)
         {
@@ -556,7 +557,7 @@ public partial class MainForm : Form
             if (rtxt.TextLength == 0) rtxt.Text += text;
             else rtxt.Text += Environment.NewLine + text;
         }
-        
+
     }
 
     private void OpenFile(string path, bool bIsLog = false)
@@ -569,7 +570,7 @@ public partial class MainForm : Form
         Process.Start(new ProcessStartInfo { FileName = @path, UseShellExecute = true });
     }
 
-    private string OpenDirectoryDialog(string path) 
+    private string OpenDirectoryDialog(string path)
     {
         var fbd = new FolderBrowserDialog();
         if (string.IsNullOrEmpty(path) || path.StartsWith("C:\\ExamplePath"))
@@ -623,7 +624,7 @@ public partial class MainForm : Form
     {
         ValidateContentDir();
     }
-    
+
     private void ValidateContentDir()
     {
         if ((string.IsNullOrEmpty(rtxtContentDir.Text) || !Directory.Exists(rtxtContentDir.Text)) && !Directory.Exists(lastValidContentDir))
@@ -686,23 +687,23 @@ public partial class MainForm : Form
     }
 
     #region Button Click Events
-    
+
     #region Run Buttons
-    
+
     private void btnScanAssets_Click(object sender, EventArgs e)
     {
         SetupGlobals();
-        Task.Run(() => 
+        Task.Run(() =>
         {
-            try 
+            try
             {
-                lock(boolLock) isRunning = true;
+                lock (boolLock) isRunning = true;
                 ToggleButtons();
                 system.ScanAssetTypes();
-                lock(boolLock) isRunning = false;
+                lock (boolLock) isRunning = false;
                 ToggleButtons();
             }
-            catch (Exception exception) 
+            catch (Exception exception)
             {
                 OutputText(exception.ToString(), rtxtOutput);
                 lock (boolLock) isRunning = false;
@@ -721,7 +722,7 @@ public partial class MainForm : Form
         {
             try
             {
-                lock(boolLock) isRunning = true;
+                lock (boolLock) isRunning = true;
                 ToggleButtons();
                 system.GetCookedAssets(false);
                 lock (boolLock) isRunning = false;
@@ -737,7 +738,7 @@ public partial class MainForm : Form
             OutputText("Moved assets!", rtxtOutput);
         });
     }
-    
+
     private void btnCopyAssets_Click(object sender, EventArgs e)
     {
         SetupGlobals();
@@ -746,7 +747,7 @@ public partial class MainForm : Form
         {
             try
             {
-                lock(boolLock) isRunning = true;
+                lock (boolLock) isRunning = true;
                 ToggleButtons();
                 system.GetCookedAssets(true);
                 lock (boolLock) isRunning = false;
@@ -774,10 +775,11 @@ public partial class MainForm : Form
                 lock (boolLock) isRunning = true;
                 ToggleButtons();
                 system.SerializeAssets();
-                lock(boolLock) isRunning = false;
+                lock (boolLock) isRunning = false;
                 ToggleButtons();
             }
-            catch (Exception exception) {
+            catch (Exception exception)
+            {
                 OutputText(exception.ToString(), rtxtOutput);
                 lock (boolLock) isRunning = false;
                 ToggleButtons();
@@ -786,7 +788,7 @@ public partial class MainForm : Form
             OutputText("Serialized assets!", rtxtOutput);
         });
     }
-    
+
     private void btnSerializeNatives_Click(object sender, EventArgs e)
     {
         SetupGlobals();
@@ -798,10 +800,11 @@ public partial class MainForm : Form
                 lock (boolLock) isRunning = true;
                 ToggleButtons();
                 system.SerializeNativeAssets();
-                lock(boolLock) isRunning = false;
+                lock (boolLock) isRunning = false;
                 ToggleButtons();
             }
-            catch (Exception exception) {
+            catch (Exception exception)
+            {
                 OutputText(exception.ToString(), rtxtOutput);
                 lock (boolLock) isRunning = false;
                 ToggleButtons();
@@ -810,20 +813,20 @@ public partial class MainForm : Form
             OutputText("Serialized native assets!", rtxtOutput);
         });
     }
-    
+
     #endregion
-    
+
     private void btnSelectContentDir_Click(object sender, EventArgs e)
     {
         rtxtContentDir.Text = OpenDirectoryDialog(rtxtContentDir.Text);
         ValidateContentDir();
     }
-    
+
     private void btnAR_Click(object sender, EventArgs e)
     {
         rtxtAR.Text = OpenFileDialog(@"Binary files (*.bin)|*.bin", rtxtAR.Text);
     }
-    
+
     private void btnDfltGamCnfg_Click(object sender, EventArgs e)
     {
         rtxtDfltGamCnfg.Text = OpenFileDialog(@"ini files (*.ini)|*.ini", rtxtDfltGamCnfg.Text);
@@ -838,7 +841,7 @@ public partial class MainForm : Form
     {
         rtxtToDir.Text = OpenDirectoryDialog(rtxtToDir.Text);
     }
-    
+
     private void btnOpenAllTypes_Click(object sender, EventArgs e)
     {
         OpenFile(rtxtLogDir.Text + "\\AllTypes.txt");
@@ -867,7 +870,7 @@ public partial class MainForm : Form
             OutputText("Please select a valid file!", rtxtOutput);
             return;
         }
-        
+
         try
         {
             system.ClearLists(); // I have to do this or else the fucking lists get appended rather than set for some reason
@@ -894,14 +897,14 @@ public partial class MainForm : Form
     {
         rtxtLogDir.Text = OpenDirectoryDialog(rtxtLogDir.Text);
     }
-    
+
     private void btnFromDir_Click(object sender, EventArgs e)
     {
         rtxtFromDir.Text = OpenDirectoryDialog(rtxtFromDir.Text);
     }
-    
+
     #endregion
-    
+
     private void chkSettDNS_CheckedChanged(object sender, EventArgs e)
     {
         AppSettings.Default.bDNSSave = chkSettDNS.Checked;
@@ -915,24 +918,24 @@ public partial class MainForm : Form
     }
 
     #region Tree
-    
+
     private void treeParseDir_MouseMove(object sender, MouseEventArgs e)
     {
-           //// Get the node at the current mouse pointer location.  
-           //TreeNode theNode = this.treeParseDir.GetNodeAt(e.X, e.Y);  
-  
-           //// Set a ToolTip only if the mouse pointer is actually paused on a node.  
-           //if (theNode != null && theNode.Name != null)  
-           //{  
-           //    // Change the ToolTip only if the pointer moved to a new node.  
-           //    if (theNode.Name != this.tTipTree.GetToolTip(this.treeParseDir))  
-           //        this.tTipTree.SetToolTip(this.treeParseDir, theNode.Name);
+        //// Get the node at the current mouse pointer location.  
+        //TreeNode theNode = this.treeParseDir.GetNodeAt(e.X, e.Y);  
 
-           //}  
-           //else     // Pointer is not over a node so clear the ToolTip.  
-           //{  
-           //    this.tTipTree.SetToolTip(this.treeParseDir, "");
-           //}   
+        //// Set a ToolTip only if the mouse pointer is actually paused on a node.  
+        //if (theNode != null && theNode.Name != null)  
+        //{  
+        //    // Change the ToolTip only if the pointer moved to a new node.  
+        //    if (theNode.Name != this.tTipTree.GetToolTip(this.treeParseDir))  
+        //        this.tTipTree.SetToolTip(this.treeParseDir, theNode.Name);
+
+        //}  
+        //else     // Pointer is not over a node so clear the ToolTip.  
+        //{  
+        //    this.tTipTree.SetToolTip(this.treeParseDir, "");
+        //}   
     }
 
     private void LoadFiles(string dir, TreeNode td)
@@ -940,7 +943,7 @@ public partial class MainForm : Form
         string[] Files = Array.Empty<string>();
         try
         {
-           Files = Directory.GetFiles(dir, "*.uasset");
+            Files = Directory.GetFiles(dir, "*.uasset");
             // Loop through them to see files  
             foreach (string file in Files)
             {
@@ -1044,12 +1047,12 @@ public partial class MainForm : Form
                 LoadChildrenNodes(subfullpaths, node);
             }
         }
-        
+
         if (fullpaths.Count > 0) // TODO: Not really sure what the point of this is
         {
             foreach (var path in fullpaths)
             {
-                Debug.WriteLine("Node: "+topnode.Name);
+                Debug.WriteLine("Node: " + topnode.Name);
                 Debug.WriteLine(path);
             }
         }
@@ -1059,7 +1062,7 @@ public partial class MainForm : Form
     {
 
     }
-    
+
     private void cancelSerializationToolStripMenuItem_Click(object sender, EventArgs e)
     {
 
@@ -1083,19 +1086,19 @@ public partial class MainForm : Form
     {
         colllapseSelectedTreeNode();
     }
-    
+
     private void colllapseSelectedTreeNode()
     {
         treeParseDir.BeginUpdate();
         treeParseDir.SelectedNode?.Collapse(false);
         treeParseDir.EndUpdate();
     }
-    
+
     private void refreshToolStripMenuItem_Click(object sender, EventArgs e)
     {
         refreshSelectedTreeNode();
     }
-    
+
     private void refreshSelectedTreeNode()
     {
         treeParseDir.BeginUpdate();
@@ -1142,7 +1145,7 @@ public partial class MainForm : Form
                     LoadFiles(node.Name, node);
                 }
             }
-        }         
+        }
     }
 
     private void treeParseDir_MouseDown(object sender, MouseEventArgs e)
@@ -1158,12 +1161,12 @@ public partial class MainForm : Form
             }
             else
             {
-                treeParseDir.SelectedNode =  treeParseDir.ContentNode;
+                treeParseDir.SelectedNode = treeParseDir.ContentNode;
             }
 
         }
     }
-    
+
     private void treeParseDir_AfterCheck(object sender, TreeViewEventArgs e)
     {
         if (e.Action == TreeViewAction.Unknown) return;

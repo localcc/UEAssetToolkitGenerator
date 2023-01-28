@@ -4,10 +4,11 @@ namespace CookedAssetSerializer.FBX;
 
 public class SkeletonFBX
 {
-    public struct FSkeletonStruct {
+    public struct FSkeletonStruct
+    {
         public FReferenceSkeleton Skeleton;
     }
-    
+
     public SkeletonFBX(FSkeletonStruct meshStruct, string path, bool bExportAsText, ref string error)
     {
         string json = JsonConvert.SerializeObject(meshStruct);

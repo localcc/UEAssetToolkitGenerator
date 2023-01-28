@@ -135,6 +135,7 @@ public static class MainSerializer
         else
         {
 #if DEBUG
+            /*
             Debug.WriteLine("-----------");
             Debug.WriteLine(asset.FilePath);
             Debug.WriteLine("Parsing unknown type " + type.ToString());
@@ -156,7 +157,7 @@ public static class MainSerializer
                     Debug.WriteLine("Last map's value type was " + lastTypeMap.Value[0].PropertyType?.ToString());
                 }
             }
-            Debug.WriteLine("-----------");
+            Debug.WriteLine("-----------");*/
 #endif
             if (leng > 0)
             {
@@ -201,7 +202,8 @@ public static class MainSerializer
         int leng = reader.ReadInt32();
         int duplicationIndex = reader.ReadInt32();
         PropertyData result = TypeToClass(type, name, reader.Asset, reader, leng, duplicationIndex, includeHeader);
-        if (result != null) {
+        if (result != null)
+        {
             result.Offset = startingOffset;
         }
         return result;
@@ -244,7 +246,13 @@ public static class MainSerializer
     /// <returns>The FProperty read from disk.</returns>
     public static UProperty ReadUProperty(AssetBinaryReader reader, FName serializedType)
     {
-        return ReadUProperty(reader, Type.GetType("UAssetAPI.FieldTypes.U" + allNonLetters.Replace(serializedType.Value.Value, string.Empty)));
+        var propertyClass = allNonLetters.Replace(serializedType.Value.Value, string.Empty);
+        var property = ReadUProperty(reader, Type.GetType("UAssetAPI.FieldTypes.U" + propertyClass));
+        if (property != null)
+        {
+            property.PropertyClass = propertyClass;
+        }
+        return property;
     }
 
     /// <summary>

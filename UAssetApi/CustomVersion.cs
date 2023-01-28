@@ -139,6 +139,73 @@ public class IntroducedAttribute : Attribute
 }
 
 /// <summary>
+/// Custom serialization version for changes made in Dev-Sequencer stream
+/// </summary>
+public enum FSequencerObjectVersion
+{
+    // Before any version changes were made
+    BeforeCustomVersionWasAdded = 0,
+
+    // Per-platform overrides player overrides for media sources changed name and type.
+    [Introduced(UE4Version.VER_UE4_14)]
+    RenameMediaSourcePlatformPlayers,
+
+    // Enable root motion isn't the right flag to use, but force root lock
+    [Introduced(UE4Version.VER_UE4_15)]
+    ConvertEnableRootMotionToForceRootLock,
+
+    [Introduced(UE4Version.VER_UE4_15)]
+    // Convert multiple rows to tracks
+    ConvertMultipleRowsToTracks,
+
+    // When finished now defaults to restore state
+    [Introduced(UE4Version.VER_UE4_16)]
+    WhenFinishedDefaultsToRestoreState,
+
+    [Introduced(UE4Version.VER_UE4_19)]
+    // EvaluationTree added
+    EvaluationTree,
+
+    [Introduced(UE4Version.VER_UE4_19)]
+    // When finished now defaults to project default
+    WhenFinishedDefaultsToProjectDefault,
+
+    [Introduced(UE4Version.VER_UE4_20)]
+    // When finished now defaults to project default
+    FloatToIntConversion,
+
+    [Introduced(UE4Version.VER_UE4_20)]
+    // Purged old spawnable blueprint classes from level sequence assets
+    PurgeSpawnableBlueprints,
+
+    [Introduced(UE4Version.VER_UE4_20)]
+    // Finish UMG evaluation on end
+    FinishUMGEvaluation,
+
+    // Manual serialization of float channel
+    [Introduced(UE4Version.VER_UE4_22)]
+    SerializeFloatChannel,
+
+    // Change the linear keys so they act the old way and interpolate always.
+    [Introduced(UE4Version.VER_UE4_22)]
+    ModifyLinearKeysForOldInterp,
+
+    // Full Manual serialization of float channel
+    [Introduced(UE4Version.VER_UE4_25)]
+    SerializeFloatChannelCompletely,
+
+    // Set ContinuouslyRespawn to false by default, added FMovieSceneSpawnable::bNetAddressableName
+    [Introduced(UE4Version.VER_UE4_27)]
+    SpawnableImprovements,
+
+    // -----<new versions can be added above this line>-------------------------------------------------
+    [Introduced(UE4Version.VER_UE4_AUTOMATIC_VERSION_PLUS_ONE)]
+    VersionPlusOne,
+    [Introduced(UE4Version.VER_UE4_AUTOMATIC_VERSION)]
+    LatestVersion = VersionPlusOne - 1
+}
+
+/// <summary>
 /// Custom serialization version for changes made in the //Fortnite/Main stream.
 /// </summary>
 public enum FFortniteMainBranchObjectVersion

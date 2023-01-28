@@ -49,6 +49,8 @@ public abstract class UProperty : UField
     [DisplayIndexOrder(5)]
     public ELifetimeCondition BlueprintReplicationCondition;
 
+    public string PropertyClass { get; set; }
+
     public object RawValue;
 
     public void SetObject(object value)
@@ -353,7 +355,7 @@ public class UStructProperty : UProperty
 
 public class UNumericProperty : UProperty
 {
-    
+
 }
 
 public class UDoubleProperty : UNumericProperty
@@ -416,5 +418,5 @@ public class UStrProperty : UProperty
 /// </summary>
 public class UGenericProperty : UProperty
 {
-    
+
 }
